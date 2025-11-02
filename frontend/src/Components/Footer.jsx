@@ -75,7 +75,7 @@ const Footer = () => {
             </li>
             <li className="flex items-center gap-2 hover:text-green-400 transition">
               <FaEnvelope className="text-green-400" />
-              nadevillasandtours21@gmail.com
+              Bookin@gmail.com
             </li>
             <li className="flex items-center gap-2 hover:text-green-400 transition">
               <FaPhone className="text-green-400" />
@@ -115,7 +115,7 @@ const Footer = () => {
 
       {/* Bottom */}
       <div className="border-t border-green-700 mt-12 pt-6 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} Nadee Villa & Tourism. All rights reserved.
+        © {new Date().getFullYear()} Booking. All rights reserved.
         <br />
         <span className="text-gray-500">
           Crafted with ❤️ in Sri Lanka — Explore. Dream. Discover.

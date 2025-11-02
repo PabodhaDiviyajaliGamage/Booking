@@ -1,15 +1,17 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import connectDB from "../config/mongodb.js";
+import connectDB from "./config/mongodb.js";
+import path from "path";
 
-import trendrouter from "../router/trendingRouter.js";
-import loginrouter from "../controller/logincontroller.js";
+import trendrouter from "./router/trendingRouter.js";
+import loginrouter from "./controller/logincontroller.js";
 
 const app = express();
+const PORT = process.env.PORT || 4000;
 
 // -------------------- 1. DATABASE CONNECTION --------------------
-connectDB();
+connectDB().catch(console.error);
 
 // -------------------- 2. GLOBAL MIDDLEWARE --------------------
 const allowedOrigins = [
@@ -50,5 +52,29 @@ app.use("/api/trending", trendrouter);
 // -------------------- 4. ROOT --------------------
 app.get("/", (req, res) => res.send("API working on Vercel 🚀"));
 
-// -------------------- 5. EXPORT (NO LISTEN) --------------------
+// -------------------- 5. ERROR HANDLING --------------------
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error',
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+});
+
+// -------------------- 6. NOT FOUND HANDLER --------------------
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: 'Route not found'
+    });
+});
+
+// -------------------- 7. START SERVER --------------------
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
+
 export default app;
