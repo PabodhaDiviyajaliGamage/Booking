@@ -52,17 +52,47 @@ app.use("/api/trending", trendrouter);
 // -------------------- 4. ROOT --------------------
 app.get("/", (req, res) => res.send("API working on Vercel 🚀"));
 
-// -------------------- 5. ERROR HANDLING --------------------
+// -------------------- 5. TIMEOUT HANDLING --------------------
+app.use((req, res, next) => {
+    // Set timeout to 8 seconds (Vercel's limit is 10s)
+    req.setTimeout(8000, () => {
+        res.status(504).json({
+            success: false,
+            message: 'Request timeout'
+        });
+    });
+    next();
+});
+
+// -------------------- 6. ERROR HANDLING --------------------
 app.use((err, req, res, next) => {
     console.error(err.stack);
+    
+    // Handle specific errors
+    if (err.name === 'PayloadTooLargeError') {
+        return res.status(413).json({
+            success: false,
+            message: 'Payload too large'
+        });
+    }
+    
+    if (err.name === 'ValidationError') {
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
+    }
+
+    // Default error response
     res.status(err.status || 500).json({
         success: false,
         message: err.message || 'Internal Server Error',
+        code: err.code,
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
 });
 
-// -------------------- 6. NOT FOUND HANDLER --------------------
+// -------------------- 7. NOT FOUND HANDLER --------------------
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -70,11 +100,5 @@ app.use((req, res) => {
     });
 });
 
-// -------------------- 7. START SERVER --------------------
-if (process.env.NODE_ENV !== 'test') {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
-}
-
+// -------------------- 8. EXPORT --------------------
 export default app;

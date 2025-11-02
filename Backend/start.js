@@ -1,24 +1,53 @@
 import app from './Server.js';
 
-const PORT = process.env.PORT || 4000;
+// Vercel serverless function handler
+export default async function handler(req, res) {
+    try {
+        // Connect to database if needed
+        await import('./config/mongodb.js').then(module => module.default());
+        
+        // Handle the request
+        return new Promise((resolve, reject) => {
+            app(req, res, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
+    } catch (error) {
+        console.error('Server error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            code: error.code || 'INTERNAL_SERVER_ERROR'
+        });
+    }
+}
 
-const server = app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-    console.log('UNHANDLED REJECTION! Shutting down...');
-    console.error('Error:', err.message);
-    
-    server.close(() => {
-        process.exit(1);
+// Development server
+if (process.env.NODE_ENV === 'development') {
+    const PORT = process.env.PORT || 4000;
+    app.listen(PORT, () => {
+        console.log(`Development server running on port ${PORT}`);
     });
+}
+
+// Global error handlers
+process.on('unhandledRejection', (err) => {
+    console.log('UNHANDLED REJECTION!');
+    console.error('Error:', err);
+    // Don't exit process in production
+    if (process.env.NODE_ENV !== 'production') {
+        process.exit(1);
+    }
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-    console.log('UNCAUGHT EXCEPTION! Shutting down...');
-    console.error('Error:', err.message);
-    process.exit(1);
+    console.log('UNCAUGHT EXCEPTION!');
+    console.error('Error:', err);
+    // Don't exit process in production
+    if (process.env.NODE_ENV !== 'production') {
+        process.exit(1);
+    }
 });
